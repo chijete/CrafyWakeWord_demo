@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CrafyWakeWord demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="js/fft.js"></script>
+  <script src="js/audio_utils.js"></script>
+  <script src="js/main.js"></script>
+</head>
+<body>
+
+  <h1>CrafyWakeWord demo</h1>
+
+  <button id="start_button">EMPEZAR A ESCUCHAR</button>
+
+  <p>Di:</p>
+  <div>
+    <p>🐚 Almeja</p>
+    <p>🧠 Cerebro</p>
+    <p>🥔 Patata</p>
+  </div>
+
+  <p>Ultimo:</p>
+  <p id="prediction_emoji"></p>
+
+  <p>Historial:</p>
+  <div id="predictions_emojis"></div>
+  
+</body>
+</html>
