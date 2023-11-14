@@ -12,18 +12,18 @@ var canvasWidth, canvasHeight;
 const classes = ["almeja", "cerebro", "patata", "oov"];
 const wakeWords = ["almeja", "cerebro", "patata"];
 const wakeWordsEmojis = ["🐚 Almeja", "🧠 Cerebro", "🥔 Patata"];
-const bufferSize = 1024;
-const channels = 1;
-const windowSize = 750;
-const zmuv_mean = 0.000016;
-const zmuv_std = 0.072771;
-const log_offset = 1e-7;
-const SPEC_HOP_LENGTH = 200;
-const MEL_SPEC_BINS = 40;
-const NUM_FFTS = 512;
-const audioFloatSize = 32767;
-const sampleRate = 16000;
-const numOfBatches = 2;
+var bufferSize = 1024;
+var channels = 1;
+var windowSize = 750;
+var zmuv_mean = 0.000016;
+var zmuv_std = 0.072771;
+var log_offset = 1e-7;
+var SPEC_HOP_LENGTH = 200;
+var MEL_SPEC_BINS = 40;
+var NUM_FFTS = 512;
+var audioFloatSize = 32767;
+var sampleRate = 16000;
+var numOfBatches = 2;
 
 let predictWords = [];
 let arrayBuffer = [];
@@ -38,6 +38,37 @@ async function loadModel() {
     tfModel = await tf.loadGraphModel('web_model/model.json');
 }
 loadModel();
+
+function loadModelData() {
+    return new Promise(function (resolve, reject) {
+        fetch('model_data.json')
+            .then(response => {
+                // Verificar si la respuesta de la solicitud es exitosa (código de estado 200)
+                if (response.status === 200) {
+                    // Convertir la respuesta a JSON
+                    return response.json();
+                } else {
+                    throw new Error('Error al cargar el archivo JSON');
+                }
+            })
+            .then(data => {
+                // Manejar los datos del archivo JSON
+                windowSize = data['window_size'];
+                zmuv_mean = data['zmuv_mean'];
+                zmuv_std = data['zmuv_std'];
+                SPEC_HOP_LENGTH = data['hop_length'];
+                MEL_SPEC_BINS = data['num_mels'];
+                NUM_FFTS = data['num_fft'];
+                sampleRate = data['sample_rate'];
+                resolve(data);
+            })
+            .catch(error => {
+                // Manejar errores
+                console.error('Error:', error);
+                reject(error);
+            });
+    });
+}
 
 function argMax(array) {
     return array.map((x, i) => [x, i]).reduce((r, a) => (a[0] > r[0] ? a : r))[1];
@@ -199,8 +230,10 @@ function initAudio() {
 
 window.addEventListener('load', function () {
     start_button.onclick = function () {
-        audioContext = new AudioContext();
-        recording = true;
-        initAudio();
+        loadModelData().then(function (result) {
+            audioContext = new AudioContext();
+            recording = true;
+            initAudio();
+        }).catch(function(error) {});
     };
 } );
