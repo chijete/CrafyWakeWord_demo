@@ -1,3 +1,22 @@
+// ---------- CONFIG ---------------
+
+// Trained wake words
+// 3 wake words and "oov" (Out Of Vocabulary)
+const classes = ["almeja", "cerebro", "patata", "oov"];
+// 3 wake words
+const wakeWords = ["almeja", "cerebro", "patata"];
+// 3 wake words for print
+const wakeWordsEmojis = ["🐚 Almeja", "🧠 Cerebro", "🥔 Patata"];
+
+// URL of web model json file
+const modelPath = 'web_model/model.json';
+// URL of model_data.json file
+const modelDataPath = 'model_data.json';
+
+var minimumProbabilityScore = 0.95;
+
+// ---------- CONFIG END ------------
+
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
 var audioContext;
@@ -9,9 +28,6 @@ var rafID = null;
 var analyserContext = null;
 var canvasWidth, canvasHeight;
 
-const classes = ["almeja", "cerebro", "patata", "oov"];
-const wakeWords = ["almeja", "cerebro", "patata"];
-const wakeWordsEmojis = ["🐚 Almeja", "🧠 Cerebro", "🥔 Patata"];
 var bufferSize = 1024;
 var channels = 1;
 var windowSize = 750;
@@ -21,7 +37,6 @@ var log_offset = 1e-7;
 var SPEC_HOP_LENGTH = 200;
 var MEL_SPEC_BINS = 40;
 var NUM_FFTS = 512;
-var audioFloatSize = 32767;
 var sampleRate = 16000;
 var numOfBatches = 2;
 
@@ -31,44 +46,38 @@ let targetState = 0;
 
 let bufferMap = {};
 
-const windowBufferSize = windowSize / 1000 * sampleRate;
+var windowBufferSize = windowSize / 1000 * sampleRate;
 
 let tfModel;
 async function loadModel() {
-    tfModel = await tf.loadGraphModel('web_model/model.json');
+    tfModel = await tf.loadGraphModel(modelPath);
 }
-loadModel();
 
-function loadModelData() {
-    return new Promise(function (resolve, reject) {
-        fetch('model_data.json')
-            .then(response => {
-                // Verificar si la respuesta de la solicitud es exitosa (código de estado 200)
-                if (response.status === 200) {
-                    // Convertir la respuesta a JSON
-                    return response.json();
-                } else {
-                    throw new Error('Error al cargar el archivo JSON');
-                }
-            })
-            .then(data => {
-                // Manejar los datos del archivo JSON
-                windowSize = data['window_size'];
-                zmuv_mean = data['zmuv_mean'];
-                zmuv_std = data['zmuv_std'];
-                SPEC_HOP_LENGTH = data['hop_length'];
-                MEL_SPEC_BINS = data['num_mels'];
-                NUM_FFTS = data['num_fft'];
-                sampleRate = data['sample_rate'];
-                resolve(data);
-            })
-            .catch(error => {
-                // Manejar errores
-                console.error('Error:', error);
-                reject(error);
-            });
-    });
+async function loadModelComplete() {
+    fetch(modelDataPath)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`Network error: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            windowSize = data['window_size'];
+            zmuv_mean = data['zmuv_mean'];
+            zmuv_std = data['zmuv_std'];
+            SPEC_HOP_LENGTH = data['hop_length'];
+            MEL_SPEC_BINS = data['num_mels'];
+            NUM_FFTS = data['num_fft'];
+            sampleRate = data['sample_rate'];
+            windowBufferSize = windowSize / 1000 * sampleRate;
+            loadModel();
+        })
+        .catch(error => {
+            console.error('Error getting JSON file:', error);
+        });
 }
+
+loadModelComplete();
 
 function argMax(array) {
     return array.map((x, i) => [x, i]).reduce((r, a) => (a[0] > r[0] ? a : r))[1];
@@ -169,10 +178,14 @@ function gotStream(stream) {
                     let class_idx = argMax(probs)
                     console.log("probabilities", probs)
                     console.log("predicted word", classes[class_idx])
-                    if (wakeWordsEmojis[class_idx] !== undefined) {
-                        document.getElementById('prediction_emoji').innerText = wakeWordsEmojis[class_idx];
+                    if (wakeWordsEmojis[class_idx] !== undefined && probs.length == classes.length && probs[class_idx] != 1) {
                         let emojiItem = document.createElement('p');
-                        emojiItem.innerText = wakeWordsEmojis[class_idx];
+                        emojiItem.innerText = wakeWordsEmojis[class_idx] + ' ' + probs[class_idx];
+                        if (probs[class_idx] < minimumProbabilityScore) {
+                            emojiItem.style.textDecoration = 'line-through';
+                        } else {
+                            document.getElementById('prediction_emoji').innerText = wakeWordsEmojis[class_idx];
+                        }
                         document.getElementById('predictions_emojis').appendChild(emojiItem);
                     }
                     // if (classes[targetState] == classes[class_idx]) {
@@ -230,10 +243,8 @@ function initAudio() {
 
 window.addEventListener('load', function () {
     start_button.onclick = function () {
-        loadModelData().then(function (result) {
-            audioContext = new AudioContext();
-            recording = true;
-            initAudio();
-        }).catch(function(error) {});
+        audioContext = new AudioContext();
+        recording = true;
+        initAudio();
     };
 } );
