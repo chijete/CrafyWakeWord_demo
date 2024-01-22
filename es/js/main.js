@@ -1,10 +1,6 @@
 // ---------- CONFIG ---------------
 
 // Trained wake words
-// 3 wake words and "oov" (Out Of Vocabulary)
-const classes = ["almeja", "cerebro", "patata", "oov"];
-// 3 wake words
-const wakeWords = ["almeja", "cerebro", "patata"];
 // 3 wake words for print
 const wakeWordsEmojis = ["🐚 Almeja", "🧠 Cerebro", "🥔 Patata"];
 
@@ -16,6 +12,11 @@ const modelDataPath = 'model_data.json';
 var minimumProbabilityScore = 0.95;
 
 // ---------- CONFIG END ------------
+
+// 3 wake words and "oov" (Out Of Vocabulary)
+var classes = ["almeja", "cerebro", "patata", "oov"];
+// 3 wake words
+var wakeWords = ["almeja", "cerebro", "patata"];
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext;
 
@@ -65,11 +66,14 @@ async function loadModelComplete() {
             windowSize = data['window_size'];
             zmuv_mean = data['zmuv_mean'];
             zmuv_std = data['zmuv_std'];
+            log_offset = data['log_offset'];
             SPEC_HOP_LENGTH = data['hop_length'];
             MEL_SPEC_BINS = data['num_mels'];
             NUM_FFTS = data['num_fft'];
             sampleRate = data['sample_rate'];
             windowBufferSize = windowSize / 1000 * sampleRate;
+            classes = data['classes'];
+            wakeWords = data['classes_base'];
             loadModel();
         })
         .catch(error => {
