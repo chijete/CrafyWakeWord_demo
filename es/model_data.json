@@ -1,1 +1,38 @@
-{"zmuv_mean": -0.0001284093305002898, "zmuv_std": 0.08096805214881897, "window_size": 750, "hop_length": 200, "num_mels": 40, "num_fft": 512, "sample_rate": 16000, "log_offset": 1e-07, "train_epochs": 35, "original_path": "dataset/model_trained.pt", "final_validation_loss": 0.056507546454668045, "classes": ["almeja", "cerebro", "patata", "oov"], "classes_base": ["almeja", "cerebro", "patata"], "vanilla_noise_in_negative_dataset": true}
+{
+  "zmuv_mean": -0.00014455989003181458,
+  "zmuv_std": 0.08259022980928421,
+  "window_size": 750,
+  "hop_length": 200,
+  "num_mels": 40,
+  "num_fft": 512,
+  "sample_rate": 16000,
+  "log_offset": 1e-07,
+  "train_epochs": 30,
+  "original_path": "dataset/model_trained_improved.pt",
+  "final_validation_loss": 0.43947380781173706,
+  "final_test_loss": 0.49013397097587585,
+  "final_test_accuracy": 0.9393131043681227,
+  "classes": [
+    "almeja",
+    "cerebro",
+    "patata",
+    "oov"
+  ],
+  "classes_base": [
+    "almeja",
+    "cerebro",
+    "patata"
+  ],
+  "vanilla_noise_in_negative_dataset": true,
+  "improvements": [
+    "depthwise_separable_convolutions",
+    "residual_connections",
+    "cosine_annealing_scheduler",
+    "gradient_clipping",
+    "label_smoothing",
+    "per_utterance_normalization",
+    "aggressive_dropout",
+    "adaptive_weight_decay",
+    "early_stopping"
+  ]
+}
